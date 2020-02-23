@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -44,7 +46,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  bool _lights = false;
+
+  final _rawPoints = <Offset>[];
 
   @override
   Widget build(BuildContext context) {
@@ -55,40 +58,52 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Container(
-        alignment: FractionalOffset.center,
-        color: Colors.white,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Icon(
-                Icons.lightbulb_outline,
-                color: _lights ? Colors.yellow.shade600 : Colors.black,
-                size: 60,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _lights = !_lights;
-                });
-              },
-              child: Container(
-                color: Colors.yellow.shade600,
-                padding: const EdgeInsets.all(16),
-                child: const Text('TURN LIGHTS ON'),
-              ),
-            ),
-          ],
+      body: GestureDetector(
+        onPanStart: (details) => {
+          setState(() {
+            _rawPoints.clear();
+            _rawPoints.add(details.globalPosition);
+          })
+        },
+        onPanUpdate: (details) => {
+          setState(() {
+            _rawPoints.add(details.globalPosition);
+          })
+        },
+        onPanEnd: (details) => {
+          setState(() {
+            
+          })
+         },
+
+        child: CustomPaint(
+          painter: ShapePainter(_rawPoints),
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+          ),
         ),
-      )
+      ),
     );
   }
+}
+
+class ShapePainter extends CustomPainter {
+
+  final _points;
+
+  ShapePainter(this._points): super();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+    ..color = Colors.orange
+    ..isAntiAlias = true
+    ..strokeWidth = 3;
+    canvas.drawPoints(PointMode.polygon, _points, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
+
 }
